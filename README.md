@@ -1,5 +1,10 @@
+![crate](https://img.shields.io/crates/v/elapsed-time?style=plastic)
+
 This crate help you to measure time taken by a function or a block of code for "print" debugging purpose. It output in stdout (using `println`) the elapsed time.
 
+```toml
+elapsed-time = "0.1"
+```
 
 # usage
 ```rust
