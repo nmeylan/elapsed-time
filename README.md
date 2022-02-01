@@ -15,7 +15,7 @@ fn main() {
   // measure time taken by a block
   #[elapsed_time::elapsed_block(block_name_1)]
   {
-    // some piece of code in a function
+    // some piece of code in a block
   }
   my_func();
 }
