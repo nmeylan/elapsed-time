@@ -2,6 +2,13 @@
 name = "elapsed-time"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+keywords = ["time", "measure", "debug", "performance", "metrics"]
+categories = ["development-tools", "development-tools::debugging", "development-tools::profiling"]
+repository = "https://github.com/nmeylan/elapsed-time"
+readme = "README.md"
+description = "This crate help you to measure time taken by a function or a block of code for print debugging purpose. It output in stdout (using println) the elapsed time."
+include = ["**/*.rs", "Cargo.toml", "Cargo.lock", "README.md"]
 
 [dependencies]
 quote = "1.0"
