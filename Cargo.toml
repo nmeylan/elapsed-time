@@ -12,10 +12,13 @@ include = ["**/*.rs", "Cargo.toml", "Cargo.lock", "README.md"]
 
 [dependencies]
 quote = "1.0"
-syn = {version = "1.0", features = ["full"]}
+syn = { version = "2", features = ["full"] }
 
 tracing = {version = "0.1.41", optional = true}
-log = {version = "0.4.28", optional = true}
+log = {version = "0.4.26", optional = true}
+
+[dev-dependencies]
+tracing-subscriber = {version = "0.3.20"}
 [lib]
 proc-macro = true
 

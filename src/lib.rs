@@ -1,7 +1,8 @@
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{Block, ItemFn, parse_macro_input};
-use syn::AttributeArgs;
+use syn::{parse_macro_input, punctuated::Punctuated, Block, ItemFn, Meta};
+
+type AttributeArgs = Punctuated<Meta, syn::token::Comma>;
 
 #[proc_macro_attribute]
 pub fn elapsed(_args: TokenStream, function_def: TokenStream) -> TokenStream {
@@ -16,6 +17,26 @@ pub fn elapsed(_args: TokenStream, function_def: TokenStream) -> TokenStream {
     let log_ns = format!("{} took {{}}ns", fn_name);
     let log_us = format!("{} took {{}}µs", fn_name);
     let log_ms = format!("{} took {{}}ms", fn_name);
+    #[cfg(feature = "tracing")]
+    let log_ns_stmt = quote! { tracing::debug!(#log_ns, elapsed); };
+    #[cfg(all(not(feature = "tracing"), feature = "log"))]
+    let log_ns_stmt = quote! { log::debug!(#log_ns, elapsed); };
+    #[cfg(all(not(feature = "tracing"), not(feature = "log")))]
+    let log_ns_stmt = quote! { println!(#log_ns, elapsed); };
+
+    #[cfg(feature = "tracing")]
+    let log_us_stmt = quote! { tracing::debug!(#log_us, elapsed as f64 / 1000.0); };
+    #[cfg(all(not(feature = "tracing"), feature = "log"))]
+    let log_us_stmt = quote! { log::debug!(#log_us, elapsed as f64 / 1000.0); };
+    #[cfg(all(not(feature = "tracing"), not(feature = "log")))]
+    let log_us_stmt = quote! { println!(#log_us, elapsed as f64 / 1000.0); };
+
+    #[cfg(feature = "tracing")]
+    let log_ms_stmt = quote! { tracing::debug!(#log_ms, elapsed as f64 / 1000.0 / 1000.0); };
+    #[cfg(all(not(feature = "tracing"), feature = "log"))]
+    let log_ms_stmt = quote! { log::debug!(#log_ms, elapsed as f64 / 1000.0 / 1000.0); };
+    #[cfg(all(not(feature = "tracing"), not(feature = "log")))]
+    let log_ms_stmt = quote! { println!(#log_ms, elapsed as f64 / 1000.0 / 1000.0); };
     let new_function_def = quote! {
         #(#attrs)* #vis #sig {
             let start_for_elapsed_macro = std::time::Instant::now();
@@ -23,26 +44,11 @@ pub fn elapsed(_args: TokenStream, function_def: TokenStream) -> TokenStream {
             let res = wrapped_func();
             let elapsed = start_for_elapsed_macro.elapsed().as_nanos();
             if elapsed < 1000 {
-                #[cfg(feature="tracing")]
-                tracing::debug!(#log_ns, elapsed);
-                #[cfg(feature="log")]
-                log::debug!(#log_ns, elapsed);
-                #[cfg(not(feature="tracing", feature="log"))]
-                println!(#log_ns, elapsed);
+                #log_ns_stmt
             } else if elapsed < 1000 * 1000 {
-                #[cfg(feature="tracing")]
-                tracing::debug!(#log_us, elapsed as f64 / 1000.0);
-                #[cfg(feature="log")]
-                log::debug!(#log_us, elapsed as f64 / 1000.0);
-                #[cfg(not(feature="tracing", feature="log"))]
-                println!(#log_us, elapsed as f64 / 1000.0);
+                #log_us_stmt
             } else {
-                #[cfg(feature="tracing")]
-                tracing::debug!(#log_ms, elapsed as f64 / 1000.0 / 1000.0);
-                #[cfg(feature="log")]
-                log::debug!(#log_ms, elapsed as f64 / 1000.0 / 1000.0);
-                #[cfg(not(feature="tracing", feature="log"))]
-                println!(#log_ms, elapsed as f64 / 1000.0 / 1000.0);
+                #log_ms_stmt
             }
             res
         }
@@ -53,40 +59,45 @@ pub fn elapsed(_args: TokenStream, function_def: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn elapsed_block(args: TokenStream, block_def: TokenStream) -> TokenStream {
     let mut block_name = "unnamed block".to_string();
-    let attrs = parse_macro_input!(args as AttributeArgs);
-    if attrs.len() > 0 {
-        block_name = attrs.get(0).unwrap().to_token_stream().to_string();
+    let attrs = parse_macro_input!(args with AttributeArgs::parse_terminated);
+    if let Some(first_attr) = attrs.first() {
+        block_name = first_attr.to_token_stream().to_string();
     }
     let item = syn::parse::<Block>(block_def).unwrap();
     let log_ns = format!("{} took {{}}ns", block_name);
     let log_us = format!("{} took {{}}µs", block_name);
     let log_ms = format!("{} took {{}}ms", block_name);
+    #[cfg(feature = "tracing")]
+    let log_ns_stmt = quote! { tracing::debug!(#log_ns, elapsed); };
+    #[cfg(all(not(feature = "tracing"), feature = "log"))]
+    let log_ns_stmt = quote! { log::debug!(#log_ns, elapsed); };
+    #[cfg(all(not(feature = "tracing"), not(feature = "log")))]
+    let log_ns_stmt = quote! { println!(#log_ns, elapsed); };
+
+    #[cfg(feature = "tracing")]
+    let log_us_stmt = quote! { tracing::debug!(#log_us, elapsed as f64 / 1000.0); };
+    #[cfg(all(not(feature = "tracing"), feature = "log"))]
+    let log_us_stmt = quote! { log::debug!(#log_us, elapsed as f64 / 1000.0); };
+    #[cfg(all(not(feature = "tracing"), not(feature = "log")))]
+    let log_us_stmt = quote! { println!(#log_us, elapsed as f64 / 1000.0); };
+
+    #[cfg(feature = "tracing")]
+    let log_ms_stmt = quote! { tracing::debug!(#log_ms, elapsed as f64 / 1000.0 / 1000.0); };
+    #[cfg(all(not(feature = "tracing"), feature = "log"))]
+    let log_ms_stmt = quote! { log::debug!(#log_ms, elapsed as f64 / 1000.0 / 1000.0); };
+    #[cfg(all(not(feature = "tracing"), not(feature = "log")))]
+    let log_ms_stmt = quote! { println!(#log_ms, elapsed as f64 / 1000.0 / 1000.0); };
     let new_block_def = quote! {
         {
             let start_for_elapsed_macro = std::time::Instant::now();
             #item
             let elapsed = start_for_elapsed_macro.elapsed().as_nanos();
             if elapsed < 1000 {
-                #[cfg(feature="tracing")]
-                tracing::debug!(#log_ns, elapsed);
-                #[cfg(feature="log")]
-                log::debug!(#log_ns, elapsed);
-                #[cfg(not(feature="tracing", feature="log"))]
-                println!(#log_ns, elapsed);
+                #log_ns_stmt
             } else if elapsed < 1000 * 1000 {
-                #[cfg(feature="tracing")]
-                tracing::debug!(#log_us, elapsed as f64 / 1000.0);
-                #[cfg(feature="log")]
-                log::debug!(#log_us, elapsed as f64 / 1000.0);
-                #[cfg(not(feature="tracing", feature="log"))]
-                println!(#log_us, elapsed as f64 / 1000.0);
+                #log_us_stmt
             } else {
-                #[cfg(feature="tracing")]
-                tracing::debug!(#log_ms, elapsed as f64 / 1000.0 / 1000.0);
-                #[cfg(feature="log")]
-                log::debug!(#log_ms, elapsed as f64 / 1000.0 / 1000.0);
-                #[cfg(not(feature="tracing", feature="log"))]
-                println!(#log_ms, elapsed as f64 / 1000.0 / 1000.0);
+                #log_ms_stmt
             }
         }
     };
