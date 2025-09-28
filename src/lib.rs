@@ -23,10 +23,25 @@ pub fn elapsed(_args: TokenStream, function_def: TokenStream) -> TokenStream {
             let res = wrapped_func();
             let elapsed = start_for_elapsed_macro.elapsed().as_nanos();
             if elapsed < 1000 {
+                #[cfg(feature="tracing")]
+                tracing::debug!(#log_ns, elapsed);
+                #[cfg(feature="log")]
+                log::debug!(#log_ns, elapsed);
+                #[cfg(not(feature="tracing", feature="log"))]
                 println!(#log_ns, elapsed);
             } else if elapsed < 1000 * 1000 {
+                #[cfg(feature="tracing")]
+                tracing::debug!(#log_us, elapsed as f64 / 1000.0);
+                #[cfg(feature="log")]
+                log::debug!(#log_us, elapsed as f64 / 1000.0);
+                #[cfg(not(feature="tracing", feature="log"))]
                 println!(#log_us, elapsed as f64 / 1000.0);
             } else {
+                #[cfg(feature="tracing")]
+                tracing::debug!(#log_ms, elapsed as f64 / 1000.0 / 1000.0);
+                #[cfg(feature="log")]
+                log::debug!(#log_ms, elapsed as f64 / 1000.0 / 1000.0);
+                #[cfg(not(feature="tracing", feature="log"))]
                 println!(#log_ms, elapsed as f64 / 1000.0 / 1000.0);
             }
             res
@@ -52,10 +67,25 @@ pub fn elapsed_block(args: TokenStream, block_def: TokenStream) -> TokenStream {
             #item
             let elapsed = start_for_elapsed_macro.elapsed().as_nanos();
             if elapsed < 1000 {
+                #[cfg(feature="tracing")]
+                tracing::debug!(#log_ns, elapsed);
+                #[cfg(feature="log")]
+                log::debug!(#log_ns, elapsed);
+                #[cfg(not(feature="tracing", feature="log"))]
                 println!(#log_ns, elapsed);
             } else if elapsed < 1000 * 1000 {
+                #[cfg(feature="tracing")]
+                tracing::debug!(#log_us, elapsed as f64 / 1000.0);
+                #[cfg(feature="log")]
+                log::debug!(#log_us, elapsed as f64 / 1000.0);
+                #[cfg(not(feature="tracing", feature="log"))]
                 println!(#log_us, elapsed as f64 / 1000.0);
             } else {
+                #[cfg(feature="tracing")]
+                tracing::debug!(#log_ms, elapsed as f64 / 1000.0 / 1000.0);
+                #[cfg(feature="log")]
+                log::debug!(#log_ms, elapsed as f64 / 1000.0 / 1000.0);
+                #[cfg(not(feature="tracing", feature="log"))]
                 println!(#log_ms, elapsed as f64 / 1000.0 / 1000.0);
             }
         }
