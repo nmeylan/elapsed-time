@@ -29,3 +29,7 @@ Produce following logs:
 block_name_1 tooks 793.515574ms
 my_func tooks 28.855µs
 ```
+
+# Features
+- `tracing`: use `tracing` crate for logging instead of println
+- `log`: use `log` crate for logging instead of println
